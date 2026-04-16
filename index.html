@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Presupuesto PRO v20.2 colores calendario</title>
+  <style>
+    :root{--bg:#f6f8fb;--card:#fff;--border:#e5eaf2;--text:#0f172a;--muted:#64748b;--ok:#15803d;--okbg:#dcfce7;--warn:#b45309;--warnbg:#fef3c7;--bad:#b91c1c;--badbg:#fee2e2}
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+    .wrap{max-width:1280px;margin:0 auto;padding:18px}.card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.05)}
+    .grid{display:grid;gap:14px}.grid4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}.grid2{grid-template-columns:repeat(auto-fit,minmax(360px,1fr))}
+    .title{font-size:32px;font-weight:800;line-height:1.05;margin:0}.sub{color:var(--muted);margin-top:6px}.small{font-size:12px;color:var(--muted)}
+    .pills,.tabs{display:flex;gap:8px;flex-wrap:wrap}.pill,.tab{border:1px solid var(--border);background:#fff;border-radius:999px;padding:10px 14px;font-weight:700;cursor:pointer}.pill.active,.tab.active{background:#0f172a;color:#fff;border-color:#0f172a}
+    .hero{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}.badge{padding:8px 12px;border-radius:999px;color:#fff;font-weight:700;font-size:13px}
+    .metric-title{font-size:12px;color:var(--muted)}.metric-value{font-size:26px;font-weight:800;margin-top:8px}
+    .calendar-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;align-items:start}
+    .month{border:1px solid var(--border);border-radius:18px;padding:12px;overflow:hidden;background:#fff}.month-name{font-size:16px;font-weight:800;margin-bottom:10px}
+    .week,.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.week{margin-bottom:6px}.week div{font-size:11px;color:var(--muted);text-align:center;font-weight:700;padding:2px 0}
+    .day{min-height:72px;border:1px solid var(--border);border-radius:12px;padding:6px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;background:#fff;cursor:pointer}
+    .day.today{border:2px solid #0f172a}.day.past{background:#f8fafc;opacity:.72}.day.selected{outline:3px solid #93c5fd;outline-offset:1px}
+    .day.over{background:#fff7ed;border-color:#fdba74}
+    .day.under{background:#f0fdf4;border-color:#86efac}
+    .day.ontrack{background:#eff6ff;border-color:#93c5fd}
+    .dnum{font-size:11px;font-weight:800;line-height:1}.drec{margin-top:4px;font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dtag{margin-top:2px;font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--border);outline:none;font-size:15px}
+    button.primary{padding:12px 14px;border:none;border-radius:14px;background:#0f172a;color:#fff;font-weight:700;cursor:pointer;width:100%}
+    button.light{padding:8px 10px;border:1px solid var(--border);border-radius:12px;background:#fff;cursor:pointer}
+    .row{display:flex;justify-content:space-between;gap:10px}.list{display:grid;gap:10px}.section-title{font-size:18px;font-weight:800;margin-bottom:12px}
+    table{width:100%;border-collapse:collapse;font-size:14px} th,td{padding:10px 8px;border-bottom:1px solid var(--border);text-align:left} th{color:var(--muted);font-size:12px}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:14px} @media (max-width:900px){.split{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="wrap grid">
+  <div class="grid">
+    <div class="small" style="font-weight:800;letter-spacing:.3px">PRESUPUESTO PRO · V20.2 COLORES CALENDARIO</div>
+    <h1 class="title">Modo seguro + modo objetivo</h1>
+    <div class="sub">La app separa dos enfoques: gasto máximo seguro, o diagnóstico para intentar acabar septiembre con 2.000 € sin romper el suelo diario.</div>
+  </div>
+
+  <div class="card">
+    <div class="tabs" id="modeTabs"></div>
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px">
+      <div class="small">Día usado para cálculo principal: <strong id="mainDay"></strong></div>
+      <div class="small">Día seleccionado: <strong id="selectedDayLabel"></strong></div>
+      <div class="small" id="saveMsg"></div>
+    </div>
+  </div>
+
+  <div class="card" id="heroCard">
+    <div class="hero">
+      <div>
+        <div class="small" style="font-weight:800">ESTADO</div>
+        <div style="font-size:28px;font-weight:800;margin-top:6px" id="heroTitle"></div>
+        <div style="margin-top:8px;color:var(--muted);font-size:14px" id="heroMsg"></div>
+      </div>
+      <div class="badge" id="heroBadge"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="pills" id="monthPills"></div>
+  </div>
+
+  <div class="grid grid4">
+    <div class="card"><div class="metric-title">Máximo real hoy</div><div class="metric-value" id="maxToday"></div></div>
+    <div class="card"><div class="metric-title">Recomendado hoy</div><div class="metric-value" id="recToday"></div></div>
+    <div class="card"><div class="metric-title">Saldo proyectado 1 septiembre</div><div class="metric-value" id="projection"></div></div>
+    <div class="card"><div class="metric-title">Colchón mínimo futuro</div><div class="metric-value" id="minFuture"></div></div>
+  </div>
+
+  <div class="card" id="deltaCard">
+    <div class="hero">
+      <div>
+        <div class="small" style="font-weight:800">INDICADOR DEL DÍA SELECCIONADO</div>
+        <div style="font-size:24px;font-weight:800;margin-top:6px" id="deltaTitle"></div>
+        <div style="margin-top:8px;color:var(--muted);font-size:14px" id="deltaMsg"></div>
+      </div>
+      <div class="badge" id="deltaBadge"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Calendarios abril → agosto</div>
+    <div class="calendar-grid" id="calendars"></div>
+  </div>
+
+  <div class="split">
+    <div class="card">
+      <div class="section-title">Diagnóstico financiero</div>
+      <div class="list" id="diagnosisRows"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Añadir gasto real</div>
+      <input id="amount" placeholder="Importe en €" />
+      <div style="height:10px"></div>
+      <input id="note" placeholder="Concepto" />
+      <div style="height:10px"></div>
+      <input id="expenseDay" type="number" placeholder="Día del mes" />
+      <div style="height:10px"></div>
+      <button class="primary" id="saveExpense">Guardar gasto</button>
+    </div>
+  </div>
+
+  <div class="split">
+    <div class="card">
+      <div class="section-title">Gastos manuales del día seleccionado</div>
+      <table>
+        <thead><tr><th>Fecha</th><th>Concepto</th><th>Importe</th><th></th></tr></thead>
+        <tbody id="manualDayBody"></tbody>
+      </table>
+      <div class="small" id="manualDayEmpty" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Gastos fijos del mes seleccionado</div>
+      <table>
+        <thead><tr><th>Fecha</th><th>Concepto</th><th>Importe</th></tr></thead>
+        <tbody id="fixedExpensesBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="split">
+    <div class="card">
+      <div class="section-title">Resumen real del mes visible</div>
+      <div class="list" id="monthSummaryReal"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Resumen proyectado del mes visible</div>
+      <div class="list" id="monthSummaryProjected"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DAILY_FLOOR=0, TARGET_SEPTEMBER_BALANCE=2000;
+const monthOrder=["abril","mayo","junio","julio","agosto"];
+const monthLabels={abril:"Abril",mayo:"Mayo",junio:"Junio",julio:"Julio",agosto:"Agosto"};
+const modeLabels={safe:"Modo seguro", target:"Modo objetivo 2.000 €"};
+const weekLabels=["L","M","X","J","V","S","D"];
+const monthConfig={
+  abril:{year:2026,monthIndex:3,days:30,salary:2360,startingBalance:500,scheduled:[{day:16,amount:35,label:"Gimnasio"},{day:16,amount:40,label:"Peluquería"},{day:30,amount:540,label:"Gasto recurrente"}]},
+  mayo:{year:2026,monthIndex:4,days:31,salary:2360,scheduled:[{day:1,amount:1600/3,label:"Mensualidad deuda"},{day:10,amount:100,label:"Taller"},{day:16,amount:35,label:"Gimnasio"},{day:16,amount:40,label:"Peluquería"},{day:31,amount:540,label:"Gasto recurrente"}]},
+  junio:{year:2026,monthIndex:5,days:30,salary:2360,scheduled:[{day:1,amount:1600/3,label:"Mensualidad deuda"},{day:16,amount:35,label:"Gimnasio"},{day:16,amount:40,label:"Peluquería"},{day:30,amount:540,label:"Gasto recurrente"}]},
+  julio:{year:2026,monthIndex:6,days:31,salary:2360,scheduled:[{day:1,amount:1600/3,label:"Mensualidad deuda"},{day:1,amount:400,label:"Alquiler"},{day:10,amount:2000,label:"Amueblar casa"},{day:16,amount:35,label:"Gimnasio"},{day:16,amount:40,label:"Peluquería"},{day:31,amount:540,label:"Gasto recurrente"}]},
+  agosto:{year:2026,monthIndex:7,days:31,salary:2360,scheduled:[{day:1,amount:400,label:"Alquiler"},{day:16,amount:35,label:"Gimnasio"},{day:16,amount:40,label:"Peluquería"},{day:30,amount:540,label:"Gasto recurrente"}]}
+};
+function getSaturdays(y,m,d){const out=[];for(let i=1;i<=d;i++){const dt=new Date(y,m,i);if(dt.getDay()===6)out.push(i)}return out}
+function expandScheduled(cfg){const list=[...cfg.scheduled];for(const day of getSaturdays(cfg.year,cfg.monthIndex,cfg.days))list.push({day,amount:30,label:"Gasolina semanal"});return list.sort((a,b)=>a.day-b.day||a.amount-b.amount)}
+function lastBusinessDay(y,m){const d=new Date(y,m+1,0);while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()-1);return d.getDate()}
+function todayParts(){const now=new Date();return{year:now.getFullYear(),monthIndex:now.getMonth(),day:now.getDate()}}
+function formatEuros(v){const n=Number.isFinite(v)?v:0;return new Intl.NumberFormat("es-ES",{style:"currency",currency:"EUR",maximumFractionDigits:2}).format(n)}
+function shortEuros(v){const n=Number.isFinite(v)?v:0;return `${n.toFixed(0)} €`}
+function loadState(){try{return JSON.parse(localStorage.getItem("presupuesto_v202")||"{}")}catch{return {}}}
+function saveState(s){localStorage.setItem("presupuesto_v202",JSON.stringify(s))}
+function buildMonthTimeline(monthKey,openingBalance,movements){
+  const cfg=monthConfig[monthKey],salaryDay=lastBusinessDay(cfg.year,cfg.monthIndex),scheduled=expandScheduled(cfg),scheduledByDay={},userByDay={};
+  for(const item of scheduled){(scheduledByDay[item.day]??=[]).push(item)}
+  for(const m of movements.filter(x=>x.month===monthKey)){const day=Math.min(Math.max(Number(m.day||1),1),cfg.days);(userByDay[day]??=[]).push(m)}
+  let balance=openingBalance,scheduledTotal=0,userTotal=0; const days=[];
+  for(let day=1;day<=cfg.days;day++){
+    let salaryIn=0;if(day===salaryDay){salaryIn=cfg.salary;balance+=salaryIn}
+    const scheduledItems=scheduledByDay[day]||[],userItems=userByDay[day]||[];
+    const scheduledOut=scheduledItems.reduce((s,x)=>s+Number(x.amount||0),0),userOut=userItems.reduce((s,x)=>s+Number(x.amount||0),0);
+    balance-=scheduledOut; balance-=userOut; scheduledTotal+=scheduledOut; userTotal+=userOut;
+    days.push({day,salaryIn,scheduledItems,userItems,scheduledOut,userOut,endBalance:balance});
+  }
+  return {monthKey,openingBalance,salaryDay,salary:cfg.salary,daysInMonth:cfg.days,scheduledTotal,userTotal,closingBalance:balance,days,scheduledExpanded:scheduled};
+}
+function buildPlan(movements){let carry=monthConfig.abril.startingBalance;const out={};for(const key of monthOrder){const s=buildMonthTimeline(key,carry,movements);out[key]=s;carry=s.closingBalance}return out}
+function getCurrentMonthKey(){const {monthIndex}=todayParts();return monthOrder.find(m=>monthConfig[m].monthIndex===monthIndex)||"abril"}
+function buildGlobalDayList(plan,fromMonth,fromDay){
+  const start=monthOrder.indexOf(fromMonth),days=[];
+  for(let i=start;i<monthOrder.length;i++){
+    const key=monthOrder[i],summary=plan[key];
+    for(const d of summary.days){if(i===start&&d.day<fromDay)continue;days.push({monthKey:key,day:d.day,fixedEndBalance:d.endBalance})}
+  }
+  return days;
+}
+function computeMaxSpendToday(plan, fromMonth, fromDay){
+  const days=buildGlobalDayList(plan,fromMonth,fromDay); if(!days.length) return 0;
+  const minFuture=Math.min(...days.map(x=>x.fixedEndBalance));
+  const finalAugust=plan.agosto.closingBalance;
+  return Math.max(0, Math.min(minFuture-DAILY_FLOOR, finalAugust-TARGET_SEPTEMBER_BALANCE));
+}
+function buildDayWeights(plan, fromMonth, fromDay){
+  const days=buildGlobalDayList(plan,fromMonth,fromDay);
+  return days.map((d,i)=>{
+    const date = new Date(monthConfig[d.monthKey].year, monthConfig[d.monthKey].monthIndex, d.day);
+    const dow = date.getDay();
+    const weekendBoost = (dow===0||dow===6) ? 1.08 : 1.0;
+    const monthlyPressure = 1 / (1 + ((plan[d.monthKey].scheduledTotal / Math.max(plan[d.monthKey].daysInMonth,1)) / 100));
+    const nearTermBoost = 1 + Math.max(0, (25 - i)) / 100;
+    return weekendBoost * monthlyPressure * nearTermBoost;
+  });
+}
+function simulateForPool(days, weights, totalPool){
+  const totalWeight = weights.reduce((a,b)=>a+b,0);
+  const perDay = weights.map(w => totalWeight>0 ? totalPool * (w/totalWeight) : 0);
+  let cumulative=0, minProjected=Infinity, finalProjected=0;
+  for(let i=0;i<days.length;i++){
+    cumulative += perDay[i];
+    const projected = days[i].fixedEndBalance - cumulative;
+    if(projected < minProjected) minProjected = projected;
+    finalProjected = projected;
+  }
+  return {perDay, minProjected, finalProjected};
+}
+function computeModeResult(plan, fromMonth, fromDay, mode){
+  const days=buildGlobalDayList(plan,fromMonth,fromDay);
+  if(!days.length) return {days:[],perDay:[],minProjected:0,finalProjected:0,totalPool:0,feasible:true,reason:""};
+  const weights=buildDayWeights(plan,fromMonth,fromDay);
+  const finalAugust = plan.agosto.closingBalance;
+  const poolByTarget = Math.max(0, finalAugust - TARGET_SEPTEMBER_BALANCE);
+  if(mode==="target"){
+    const testAtTarget = simulateForPool(days, weights, poolByTarget);
+    const feasible = testAtTarget.minProjected >= DAILY_FLOOR - 1e-9;
+    if(feasible){
+      return {days, perDay:testAtTarget.perDay, minProjected:testAtTarget.minProjected, finalProjected:testAtTarget.finalProjected, totalPool:poolByTarget, feasible:true, reason:""};
+    }
+    let lo=0, hi=poolByTarget;
+    for(let i=0;i<100;i++){
+      const mid=(lo+hi)/2;
+      const sim=simulateForPool(days, weights, mid);
+      if(sim.minProjected >= DAILY_FLOOR - 1e-9){ lo=mid; } else { hi=mid; }
+    }
+    const safe = simulateForPool(days, weights, lo);
+    return {days, perDay:safe.perDay, minProjected:safe.minProjected, finalProjected:safe.finalProjected, totalPool:lo, feasible:false, reason:"Con los gastos actuales no se puede llegar a 2.000 € sin bajar de 0 € algún día."};
+  } else {
+    let lo=0, hi=Math.max(0, finalAugust);
+    for(let i=0;i<100;i++){
+      const mid=(lo+hi)/2;
+      const sim=simulateForPool(days, weights, mid);
+      if(sim.minProjected >= DAILY_FLOOR - 1e-9){ lo=mid; } else { hi=mid; }
+    }
+    const safe = simulateForPool(days, weights, lo);
+    return {days, perDay:safe.perDay, minProjected:safe.minProjected, finalProjected:safe.finalProjected, totalPool:lo, feasible:true, reason:""};
+  }
+}
+function buildCalendarCells(monthKey,currentMonthKey,currentDay,dayMap){
+  const cfg=monthConfig[monthKey], first=new Date(cfg.year,cfg.monthIndex,1), monday=(first.getDay()+6)%7, cells=Array.from({length:monday},()=>null);
+  for(let day=1;day<=cfg.days;day++){
+    const isPast=monthConfig[monthKey].monthIndex<monthConfig[currentMonthKey].monthIndex||(monthKey===currentMonthKey&&day<currentDay);
+    const key=`${monthKey}-${day}`;
+    cells.push({day,recommended:isPast?null:dayMap[key],isPast,isToday:monthKey===currentMonthKey&&day===currentDay});
+  }
+  while(cells.length%7!==0) cells.push(null);
+  return cells;
+}
+function topStatus(summary,day,maxSpend,todaySpend,mode,sim){
+  if(mode==="target" && !sim.feasible) return {label:"Objetivo no viable",message:sim.reason,tone:"var(--bad)",soft:"var(--badbg)"};
+  if(maxSpend<=0&&day<summary.salaryDay)return{label:"Bloqueado antes de nómina",message:"Cualquier gasto extra rompería el plan antes de cobrar.",tone:"var(--bad)",soft:"var(--badbg)"};
+  if(maxSpend<=0)return{label:"Sin margen",message:"No hay margen si quieres mantener 0 € mínimo diario.",tone:"var(--bad)",soft:"var(--badbg)"};
+  if(mode==="safe") return {label:"Modo seguro",message:"La app reparte el máximo gasto compatible con no bajar de 0 € ningún día.",tone:"var(--ok)",soft:"var(--okbg)"};
+  if(todaySpend<15)return{label:"Objetivo viable pero justo",message:"Se puede llegar a 2.000 €, pero vas ajustado.",tone:"var(--warn)",soft:"var(--warnbg)"};
+  return{label:"Objetivo viable",message:"Se puede mantener el suelo diario y llegar cerca de 2.000 €.",tone:"var(--ok)",soft:"var(--okbg)"};
+}
+
+
+function getRecommendedForSpecificDay(plan, mode, monthKey, day){
+  const currentMonth=getCurrentMonthKey(), now=todayParts();
+  const sim=computeModeResult(plan,currentMonth,now.day,mode);
+  const idx = sim.days.findIndex(d => d.monthKey===monthKey && d.day===day);
+  return idx >= 0 ? (sim.perDay[idx] || 0) : 0;
+}
+function getDeltaIndicator(actual, recommended){
+  const diff = actual - recommended;
+  if (Math.abs(diff) < 0.01) {
+    return {title:"En línea con el plan", msg:"Ese día has gastado prácticamente lo recomendado.", tone:"var(--ok)", soft:"var(--okbg)", badge:"OK"};
+  }
+  if (diff > 0) {
+    return {title:`Has gastado ${formatEuros(diff)} de más`, msg:"Los días posteriores tenderán a ajustarse a la baja.", tone:"var(--warn)", soft:"var(--warnbg)", badge:"Te pasaste"};
+  }
+  return {title:`Has gastado ${formatEuros(Math.abs(diff))} de menos`, msg:"Los días posteriores tenderán a relajarse al alza.", tone:"var(--ok)", soft:"var(--okbg)", badge:"Ahorraste"};
+}
+
+const state=loadState();
+let selectedMonth=state.selectedMonth||getCurrentMonthKey();
+let selectedDay=state.selectedDay||1;
+let mode=state.mode||"safe";
+let movements=Array.isArray(state.movements)?state.movements:[];
+function persist(msg=""){saveState({selectedMonth,selectedDay,mode,movements});document.getElementById("saveMsg").textContent=msg;if(msg)setTimeout(()=>{document.getElementById("saveMsg").textContent=""},1200)}
+function addRows(el, rows){
+  el.innerHTML="";
+  rows.forEach(([k,v])=>{const row=document.createElement("div"); row.className="row"; row.innerHTML=`<span style="color:var(--muted)">${k}</span><strong>${v}</strong>`; el.appendChild(row);});
+}
+function render(){
+  const currentMonth=getCurrentMonthKey(), now=todayParts(), plan=buildPlan(movements), summary=plan[selectedMonth], currentSummary=plan[currentMonth], visibleDay=(monthConfig[selectedMonth].monthIndex===now.monthIndex?now.day:1);
+  if(selectedDay < 1 || selectedDay > monthConfig[selectedMonth].days) selectedDay = visibleDay;
+
+  const maxSpendToday=computeMaxSpendToday(plan,currentMonth,now.day);
+  const sim=computeModeResult(plan,currentMonth,now.day,mode);
+  const dayMap={}; sim.days.forEach((d,i)=> dayMap[`${d.monthKey}-${d.day}`]=sim.perDay[i]);
+  const todaySpend=dayMap[`${currentMonth}-${now.day}`] || 0;
+  const headerStatus=topStatus(currentSummary,now.day,maxSpendToday,todaySpend,mode,sim);
+
+  const tabs=document.getElementById("modeTabs"); tabs.innerHTML="";
+  Object.entries(modeLabels).forEach(([k,label])=>{
+    const b=document.createElement("button"); b.className="tab"+(k===mode?" active":""); b.textContent=label;
+    b.onclick=()=>{mode=k; persist(); render()}; tabs.appendChild(b);
+  });
+
+  document.getElementById("mainDay").textContent=now.day;
+  document.getElementById("selectedDayLabel").textContent=`${selectedDay} ${monthLabels[selectedMonth]}`;
+  document.getElementById("heroCard").style.background=`linear-gradient(135deg, ${headerStatus.soft} 0%, white 100%)`;
+  document.getElementById("heroTitle").textContent=todaySpend<=0?"HOY no deberías gastar":`Hoy deberías gastar como máximo ${formatEuros(todaySpend)}`;
+  document.getElementById("heroMsg").textContent=headerStatus.message;
+  const hb=document.getElementById("heroBadge"); hb.textContent=headerStatus.label; hb.style.background=headerStatus.tone;
+
+  document.getElementById("maxToday").textContent=formatEuros(maxSpendToday);
+  document.getElementById("recToday").textContent=formatEuros(todaySpend);
+  document.getElementById("projection").textContent=formatEuros(sim.finalProjected||0);
+  document.getElementById("minFuture").textContent=formatEuros(sim.minProjected||0);
+
+  const selectedActual = movements.filter(m=>m.month===selectedMonth && Number(m.day)===Number(selectedDay)).reduce((s,m)=>s+Number(m.amount||0),0);
+  const selectedRecommended = getRecommendedForSpecificDay(plan, mode, selectedMonth, selectedDay);
+  const delta = getDeltaIndicator(selectedActual, selectedRecommended);
+  document.getElementById("deltaCard").style.background = `linear-gradient(135deg, ${delta.soft} 0%, white 100%)`;
+  document.getElementById("deltaTitle").textContent = delta.title;
+  document.getElementById("deltaMsg").textContent = selectedActual > 0 ? `${delta.msg} Gasto real del día: ${formatEuros(selectedActual)}. Recomendado: ${formatEuros(selectedRecommended)}.` : `Aún no hay gasto manual en ese día. Recomendado: ${formatEuros(selectedRecommended)}.`;
+  const deltaBadge=document.getElementById("deltaBadge"); deltaBadge.textContent=delta.badge; deltaBadge.style.background=delta.tone;
+
+  addRows(document.getElementById("diagnosisRows"), [
+    ["Modo actual", modeLabels[mode]],
+    ["Gastado acumulado actual", formatEuros(movements.filter(m=>m.month===currentMonth && Number(m.day||0)<=now.day).reduce((s,m)=>s+Number(m.amount||0),0))],
+    ["Objetivo final", formatEuros(TARGET_SEPTEMBER_BALANCE)],
+    ["Estado", mode==="target" ? (sim.feasible ? "Viable" : "No viable") : "Seguro"],
+    ["Diferencia vs 2.000 €", formatEuros((sim.finalProjected||0) - TARGET_SEPTEMBER_BALANCE)]
+  ]);
+
+  const pills=document.getElementById("monthPills"); pills.innerHTML="";
+  monthOrder.forEach(m=>{const b=document.createElement("button"); b.className="pill"+(m===selectedMonth?" active":""); b.textContent=monthLabels[m]; b.onclick=()=>{selectedMonth=m; if(selectedDay>monthConfig[m].days) selectedDay=1; persist(); render()}; pills.appendChild(b)});
+
+  const calendars=document.getElementById("calendars"); calendars.innerHTML="";
+  monthOrder.forEach(monthKey=>{
+    const box=document.createElement("div"); box.className="month"; box.innerHTML=`<div class="month-name">${monthLabels[monthKey]}</div>`;
+    const week=document.createElement("div"); week.className="week"; weekLabels.forEach(w=>{const d=document.createElement("div"); d.textContent=w; week.appendChild(d)}); box.appendChild(week);
+    const days=document.createElement("div"); days.className="days";
+    buildCalendarCells(monthKey,currentMonth,now.day,dayMap).forEach(cell=>{
+      if(!cell){const blank=document.createElement("div"); blank.style.minHeight="72px"; days.appendChild(blank); return;}
+      const day=document.createElement("div");
+      const isSelected = monthKey===selectedMonth && cell.day===selectedDay;
+      const actualForDay = movements.filter(m=>m.month===monthKey && Number(m.day)===Number(cell.day)).reduce((s,m)=>s+Number(m.amount||0),0);
+      let statusClass = "";
+      let statusTag = cell.recommended===null ? "pasado" : (cell.isToday ? "hoy" : "óptimo");
+      if(cell.recommended!==null && actualForDay>0){
+        const diff = actualForDay - (cell.recommended||0);
+        if(Math.abs(diff) < 0.01){ statusClass = " ontrack"; statusTag = "en línea"; }
+        else if(diff > 0){ statusClass = " over"; statusTag = "te pasaste"; }
+        else { statusClass = " under"; statusTag = "ahorraste"; }
+      }
+      day.className="day"+(cell.isToday?" today":"")+(cell.isPast?" past":"")+(isSelected?" selected":"")+statusClass;
+      const recText=cell.recommended===null?"—":shortEuros(cell.recommended);
+      day.innerHTML=`<div class="dnum">${cell.day}</div><div class="drec">${recText}</div><div class="dtag">${statusTag}</div>`;
+      day.onclick=()=>{selectedMonth=monthKey; selectedDay=cell.day; persist(); render()};
+      days.appendChild(day);
+    });
+    box.appendChild(days); calendars.appendChild(box);
+  });
+
+  const dayBody=document.getElementById("manualDayBody");
+  const dayEmpty=document.getElementById("manualDayEmpty");
+  dayBody.innerHTML="";
+  const dayMovements = movements.filter(m=>m.month===selectedMonth && Number(m.day)===Number(selectedDay));
+  if(!dayMovements.length){
+    dayEmpty.textContent="No hay gastos manuales registrados para ese día.";
+  } else {
+    dayEmpty.textContent="";
+    dayMovements.sort((a,b)=>a.id-b.id).forEach(m=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>${m.day} ${monthLabels[selectedMonth]}</td><td>${m.note}</td><td>${formatEuros(m.amount)}</td><td></td>`;
+      const btn=document.createElement("button");
+      btn.className="light";
+      btn.textContent="Eliminar";
+      btn.onclick=()=>{movements=movements.filter(x=>x.id!==m.id); persist("Guardado automático activado"); render()};
+      tr.children[3].appendChild(btn);
+      dayBody.appendChild(tr);
+    });
+  }
+
+  const fixedBody=document.getElementById("fixedExpensesBody");
+  fixedBody.innerHTML="";
+  summary.scheduledExpanded.forEach(item=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${item.day} ${monthLabels[selectedMonth]}</td><td>${item.label}</td><td>${formatEuros(item.amount)}</td>`;
+    fixedBody.appendChild(tr);
+  });
+
+  addRows(document.getElementById("monthSummaryReal"), [
+    ["Saldo al empezar", formatEuros(summary.openingBalance)],
+    ["Último día laborable", summary.salaryDay],
+    ["Nómina del mes", formatEuros(summary.salary)],
+    ["Comprometido programado", formatEuros(summary.scheduledTotal)],
+    ["Tus gastos registrados", formatEuros(summary.userTotal)],
+    ["Saldo real al cerrar", formatEuros(summary.closingBalance)]
+  ]);
+
+  const projectedMonthSpend = Object.entries(dayMap).filter(([k,v])=>k.startsWith(selectedMonth+"-")).reduce((s,[k,v])=>s+Number(v||0),0);
+  addRows(document.getElementById("monthSummaryProjected"), [
+    ["Gasto proyectado del mes", formatEuros(projectedMonthSpend)],
+    ["Saldo proyectado al cerrar", formatEuros(summary.closingBalance - projectedMonthSpend)],
+    ["Saldo proyectado 1 septiembre", formatEuros(sim.finalProjected||0)],
+    ["Colchón mínimo futuro", formatEuros(sim.minProjected||0)]
+  ]);
+
+  document.getElementById("expenseDay").placeholder=`Día del mes (por defecto ${selectedDay})`;
+}
+document.getElementById("saveExpense").onclick=()=>{
+  const amount=parseFloat(String(document.getElementById("amount").value).replace(",",".")),note=document.getElementById("note").value||"Gasto",dayInput=document.getElementById("expenseDay").value,day=Number(dayInput||selectedDay);
+  if(!(amount>0))return; if(!(day>=1&&day<=monthConfig[selectedMonth].days))return;
+  movements=[{id:Date.now(),month:selectedMonth,day,amount,note},...movements];
+  selectedDay=day;
+  document.getElementById("amount").value=""; document.getElementById("note").value=""; document.getElementById("expenseDay").value="";
+  persist("Guardado automático activado"); render();
+};
+render();
+</script>
+</body>
+</html>
